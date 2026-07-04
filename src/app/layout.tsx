@@ -29,31 +29,30 @@ export const metadata: Metadata = {
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"
   ),
-  title: "basePilot — Voice-controlled DeFi on Base",
+  title: "monadPilot — Voice-controlled DeFi on Monad",
   description:
-    "Talk to DeFi. Send tokens, swap, lend on Morpho, and farm the best APYs on Base — all with one sentence.",
-  applicationName: "basePilot",
+    "Talk to DeFi. Send tokens, swap, explore hackathon projects, and farm the best APYs on Monad — all with one sentence.",
+  applicationName: "monadPilot",
   icons: [
     { rel: "icon", url: "/icon.svg", type: "image/svg+xml" },
     { rel: "apple-touch-icon", url: "/icon.svg" },
   ],
   keywords: [
-    "Base",
+    "Monad",
     "DeFi",
     "AI",
     "Voice",
-    "Morpho",
-    "Aerodrome",
-    "Moonwell",
+    "Ambient",
+    "Kuru",
     "Swap",
     "Wallet",
     "Copilot",
   ],
   openGraph: {
-    title: "basePilot — Talk to DeFi",
-    description: "Voice-controlled DeFi execution on Base.",
+    title: "monadPilot — Talk to DeFi",
+    description: "Voice-controlled DeFi execution on Monad.",
     type: "website",
-    images: ["/mascot-banner.png"],
+    images: ["/monad_banner_new.png"],
   },
 };
 

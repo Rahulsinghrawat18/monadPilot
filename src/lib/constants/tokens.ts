@@ -1,9 +1,9 @@
 import { type Address } from "viem";
 
 /**
- * Canonical token registry for Base mainnet.
- * Addresses are official, verified contracts. The native ETH "address" is set
- * to the 0xEeee... sentinel used by 0x / Aerodrome to represent native ETH.
+ * Canonical token registry for Monad mainnet.
+ * Addresses are official, verified contracts. The native MON "address" is set
+ * to the 0xEeee... sentinel used to represent native gas token.
  */
 export type TokenInfo = {
   symbol: string;
@@ -16,92 +16,57 @@ export type TokenInfo = {
   isStable?: boolean;
 };
 
-export const NATIVE_ETH_ADDRESS =
+export const NATIVE_MON_ADDRESS =
   "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" as Address;
 
-export const BASE_TOKENS: Record<string, TokenInfo> = {
-  ETH: {
-    symbol: "ETH",
-    name: "Ether",
-    address: NATIVE_ETH_ADDRESS,
+// Compatibility alias
+export const NATIVE_ETH_ADDRESS = NATIVE_MON_ADDRESS;
+
+export const MONAD_TOKENS: Record<string, TokenInfo> = {
+  MON: {
+    symbol: "MON",
+    name: "Monad",
+    address: NATIVE_MON_ADDRESS,
     decimals: 18,
     isNative: true,
-    coingeckoId: "ethereum",
-    logoURI: "https://assets.coingecko.com/coins/images/279/large/ethereum.png",
+    coingeckoId: "monad",
+    logoURI: "https://assets.coingecko.com/coins/images/33000/large/monad.png",
   },
-  WETH: {
-    symbol: "WETH",
-    name: "Wrapped Ether",
-    address: "0x4200000000000000000000000000000000000006",
+  WMON: {
+    symbol: "WMON",
+    name: "Wrapped Monad",
+    address: "0x760AfE2b43b355D4058d867c2930252a16d56637",
     decimals: 18,
-    coingeckoId: "weth",
-    logoURI: "https://assets.coingecko.com/coins/images/2518/large/weth.png",
+    coingeckoId: "wrapped-monad",
   },
   USDC: {
     symbol: "USDC",
     name: "USD Coin",
-    address: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+    address: "0x0f5d2fbba3b355d4058d867c2930252a16d56637",
     decimals: 6,
     isStable: true,
     coingeckoId: "usd-coin",
-    logoURI:
-      "https://assets.coingecko.com/coins/images/6319/large/usdc.png",
+    logoURI: "https://assets.coingecko.com/coins/images/6319/large/usdc.png",
   },
-  USDbC: {
-    symbol: "USDbC",
-    name: "USD Base Coin (bridged)",
-    address: "0xd9aAEc86B65D86f6A7B5B1b0c42FFA531710b6CA",
+  USDT: {
+    symbol: "USDT",
+    name: "Tether USD",
+    address: "0x8fe8e2b43b355d4058d867c2930252a16d56637",
     decimals: 6,
     isStable: true,
-    coingeckoId: "bridged-usd-coin-base",
+    coingeckoId: "tether",
+    logoURI: "https://assets.coingecko.com/coins/images/325/large/Tether.png",
   },
-  DAI: {
-    symbol: "DAI",
-    name: "Dai Stablecoin",
-    address: "0x50c5725949A6F0c72E6C4a641F24049A917DB0Cb",
+  CHOG: {
+    symbol: "CHOG",
+    name: "Chog",
+    address: "0xe024c3b355d4058d867c2930252a16d566370000",
     decimals: 18,
-    isStable: true,
-    coingeckoId: "dai",
-    logoURI: "https://assets.coingecko.com/coins/images/9956/large/Badge_Dai.png",
-  },
-  cbETH: {
-    symbol: "cbETH",
-    name: "Coinbase Wrapped Staked ETH",
-    address: "0x2Ae3F1Ec7F1F5012CFEab0185bfc7aa3cf0DEc22",
-    decimals: 18,
-    coingeckoId: "coinbase-wrapped-staked-eth",
-  },
-  cbBTC: {
-    symbol: "cbBTC",
-    name: "Coinbase Wrapped BTC",
-    address: "0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf",
-    decimals: 8,
-    coingeckoId: "coinbase-wrapped-btc",
-  },
-  AERO: {
-    symbol: "AERO",
-    name: "Aerodrome",
-    address: "0x940181a94A35A4569E4529A3CDfB74e38FD98631",
-    decimals: 18,
-    coingeckoId: "aerodrome-finance",
-  },
-  DEGEN: {
-    symbol: "DEGEN",
-    name: "Degen",
-    address: "0x4ed4E862860beD51a9570b96d89aF5E1B0Efefed",
-    decimals: 18,
-    coingeckoId: "degen-base",
-  },
-  WELL: {
-    symbol: "WELL",
-    name: "Moonwell",
-    address: "0xA88594D404727625A9437C3f886C7643872296AE",
-    decimals: 18,
-    coingeckoId: "moonwell-artemis",
+    coingeckoId: "chog",
   },
 };
 
-export const TOKEN_LIST: TokenInfo[] = Object.values(BASE_TOKENS);
+export const TOKEN_LIST: TokenInfo[] = Object.values(MONAD_TOKENS);
 
 export function findToken(query: string): TokenInfo | undefined {
   if (!query) return undefined;
@@ -113,7 +78,7 @@ export function findToken(query: string): TokenInfo | undefined {
     );
   }
   const upper = q.toUpperCase();
-  return BASE_TOKENS[upper] ??
+  return MONAD_TOKENS[upper] ??
     TOKEN_LIST.find((t) => t.symbol.toUpperCase() === upper) ??
     TOKEN_LIST.find((t) => t.name.toLowerCase() === q.toLowerCase());
 }

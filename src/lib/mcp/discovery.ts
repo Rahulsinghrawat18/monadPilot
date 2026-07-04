@@ -19,9 +19,10 @@ export type AuthServerMetadata = {
   scopes_supported: string[];
 };
 
+const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 export const BASE_MCP_URL =
   process.env.NEXT_PUBLIC_BASE_MCP_URL?.replace(/\/$/, "") ??
-  "https://mcp.base.org";
+  `${appUrl}/api/mcp`;
 
 const FALLBACK: AuthServerMetadata = {
   issuer: BASE_MCP_URL,

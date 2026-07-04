@@ -18,12 +18,12 @@ export function Mascot({
 }) {
   return (
     <Image
-      src="/mascotnew.png"
-      alt="basePilot mascot"
+      src="/monad_mascot_new.png"
+      alt="monadPilot mascot"
       width={size}
       height={size}
       priority={priority}
-      className={cn("select-none", className)}
+      className={cn("select-none rounded-lg", className)}
     />
   );
 }
@@ -45,12 +45,12 @@ export function MascotBanner({ className }: { className?: string }) {
       )}
     >
       <Image
-        src="/mascotnewbg.png"
-        alt="basePilot mascot banner"
+        src="/mascotnewbg1.png"
+        alt="monadPilot mascot banner"
         width={1024}
         height={384}
         priority
-        className="h-auto w-full select-none"
+        className="h-auto w-full select-none rounded-xl"
         style={{ mixBlendMode: "screen" }}
       />
     </div>

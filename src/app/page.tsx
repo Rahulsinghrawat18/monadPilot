@@ -38,7 +38,7 @@ export default async function HomePage({
           {/* Top tag */}
           <div className="font-pixel inline-flex items-center gap-2 rounded-full border border-primary/50 bg-primary/[0.08] px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-primary">
             <span className="pixel-pulse inline-block h-1.5 w-1.5 rounded-[1px] bg-primary" />
-          LIVE
+            LIVE ON TESTNET
           </div>
 
           {/* Mascot hero banner */}
@@ -52,8 +52,8 @@ export default async function HomePage({
           </h1>
 
           <p className="mx-auto mt-5 max-w-xl text-sm text-muted-foreground sm:text-base">
-            Voice-controlled DeFi on Base. Send, swap, farm yield, and manage
-            positions —{" "}
+            Voice-controlled DeFi on Monad. Send, swap, check Blitz hackathon projects,
+            and manage positions —{" "}
             <span className="text-foreground">in one sentence.</span>
           </p>
 
@@ -85,17 +85,17 @@ export default async function HomePage({
           <FeatureCard
             icon={Mic}
             title="PUSH-TO-TALK"
-            body="Hold the mic. Speak naturally. Whisper transcribes, GPT-4 orchestrates, Base MCP executes."
+            body="Hold the mic. Speak naturally. Whisper transcribes, GPT-4 orchestrates, Monad MCP executes."
           />
           <FeatureCard
             icon={Shield}
             title="EVERY WRITE APPROVED"
-            body="No keys leave Base Account. Each transaction returns a one-click approval link. You're in control."
+            body="No private keys leave your wallet. Each transaction returns a one-click approval link. You're in control."
           />
           <FeatureCard
             icon={Zap}
             title="DEFI-NATIVE"
-            body="Morpho, Moonwell, Aerodrome, Uniswap — discover yields, deposit, swap, LP. All in one sentence."
+            body="Ambient, Kuru, Monad Lending — discover yields, deposit, swap, LP. All in one sentence."
           />
         </section>
 
@@ -109,10 +109,10 @@ export default async function HomePage({
                 <span className="h-2 w-2 rounded-[2px] bg-[#61c554]" />
               </div>
               <span className="font-pixel text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-                BASEPILOT TERMINAL
+                MONADPILOT TERMINAL
               </span>
               <span className="font-pixel text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-                BASE MAINNET
+                MONAD MAINNET
               </span>
             </div>
             <div className="grid grid-cols-1 divide-y divide-border sm:grid-cols-2 sm:divide-x sm:divide-y-0">
@@ -125,24 +125,24 @@ export default async function HomePage({
                 <Capability
                   icon={ArrowRight}
                   label="TRANSFER"
-                  prompt='"Send 5 USDC to jesse.base.eth"'
+                  prompt='"Send 5 MON to keone.monad.eth"'
                 />
                 <Capability
                   icon={Sparkles}
                   label="SWAP"
-                  prompt='"Swap 0.05 ETH to USDC"'
+                  prompt='"Swap 10 MON to WMON"'
                 />
               </div>
               <div className="p-5">
                 <Capability
                   icon={TrendingUp}
                   label="DISCOVER"
-                  prompt='"Find the best USDC yield on Base"'
+                  prompt='"Explore Blitz projects on Monad"'
                 />
                 <Capability
                   icon={Shield}
                   label="DEPOSIT"
-                  prompt='"Deposit 100 USDC into the winner"'
+                  prompt='"Deposit 10 MON into the pool"'
                 />
                 <Capability
                   icon={Mic}
@@ -159,16 +159,16 @@ export default async function HomePage({
             <div className="flex items-center gap-3">
               <Mascot size={28} />
               <span className="font-pixel text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-                BASEPILOT · TALK TO DEFI
+                MONADPILOT · TALK TO DEFI
               </span>
             </div>
             <a
-              href="https://docs.base.org/ai-agents"
+              href="https://docs.monad.xyz"
               target="_blank"
               rel="noopener noreferrer"
               className="font-pixel text-[10px] uppercase tracking-[0.2em] text-muted-foreground hover:text-foreground"
             >
-              POWERED BY BASE MCP →
+              DESIGNED FOR MONAD MAINNET →
             </a>
           </div>
         </footer>
@@ -188,7 +188,7 @@ function FeatureCard({
 }) {
   return (
     <div className="group relative overflow-hidden rounded-2xl border border-border bg-card/70 p-5 backdrop-blur transition-colors hover:border-primary/40">
-      <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg base-square">
+      <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg monad-square">
         <Icon className="h-5 w-5 text-white" />
       </div>
       <h3 className="font-pixel-bold text-[11px] uppercase tracking-[0.15em]">
@@ -224,10 +224,10 @@ function Capability({
 }
 
 const PROMPTS = [
-  "SEND 5 USDC TO JESSE.BASE.ETH",
-  "SWAP 0.05 ETH → USDC",
-  "FIND BEST USDC YIELD",
-  "DEPOSIT 100 USDC INTO MORPHO",
+  "SEND 5 MON TO KEONE.NAD",
+  "SWAP 10 MON → WMON",
+  "EXPLORE BLITZ HACKATHON PROJECTS",
+  "WHO WON BLITZ ANKARA?",
 ];
 
 function ExamplePrompts() {

@@ -21,22 +21,20 @@ export function SiteHeader({
           </div>
           <div className="flex flex-col leading-none">
             <span className="font-pixel-bold text-[12px] text-foreground">
-              basePilot
+              monadPilot
             </span>
             <span className="font-pixel hidden text-[10px] uppercase tracking-[0.18em] text-muted-foreground sm:inline">
-              VOICE · DEFI · BASE
+              VOICE · DEFI · MONAD
             </span>
           </div>
         </Link>
         <div className="flex items-center gap-3">
-          <a
-            href="https://docs.base.org/ai-agents/index"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hidden font-pixel text-[10px] uppercase tracking-[0.15em] text-muted-foreground transition-colors hover:text-foreground sm:inline"
+          <Link
+            href="/showcase"
+            className="font-pixel text-[10px] uppercase tracking-[0.15em] text-muted-foreground transition-colors hover:text-foreground inline mr-2"
           >
-            POWERED BY BASE MCP
-          </a>
+            HACKATHON SHOWCASE
+          </Link>
           <SpeechToggle />
           <ConnectButton isConnected={isConnected} address={address} />
         </div>

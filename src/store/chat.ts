@@ -156,11 +156,16 @@ export const useChat = create<ChatState>((set) => ({
 }));
 
 function dedupe(list: ApprovalRef[]): ApprovalRef[] {
-  const seen = new Set<string>();
+  const seenUrls = new Set<string>();
+  const seenIds = new Set<string>();
   const out: ApprovalRef[] = [];
   for (const a of list) {
-    if (seen.has(a.approvalUrl)) continue;
-    seen.add(a.approvalUrl);
+    const normUrl = (a.approvalUrl ?? "").replace(/\\/g, "");
+    const isDuplicate = seenUrls.has(normUrl) || (a.requestId && seenIds.has(a.requestId));
+    if (isDuplicate) continue;
+    
+    seenUrls.add(normUrl);
+    if (a.requestId) seenIds.add(a.requestId);
     out.push(a);
   }
   return out;

@@ -19,9 +19,30 @@ export function ConnectButton({
   const router = useRouter();
   const [pending, setPending] = useState(false);
 
-  const handleConnect = useCallback(() => {
+  const handleConnect = useCallback(async () => {
     setPending(true);
-    window.location.href = "/api/auth/login?returnTo=/app";
+    try {
+      if (typeof window === "undefined") return;
+      const provider = (window as any).ethereum;
+      if (!provider) {
+        // Fallback if MetaMask is not found
+        alert("MetaMask or compatible Web3 wallet not found in browser. Proceeding with simulated account.");
+        window.location.href = "/api/auth/login?returnTo=/app";
+        return;
+      }
+
+      const accounts = await provider.request({ method: "eth_requestAccounts" });
+      if (accounts && accounts.length > 0) {
+        const address = accounts[0];
+        window.location.href = `/api/auth/login?returnTo=/app&address=${encodeURIComponent(address)}`;
+      } else {
+        setPending(false);
+      }
+    } catch (e: any) {
+      console.error("MetaMask connection failed", e);
+      setPending(false);
+      alert(e.message || "Failed to connect wallet.");
+    }
   }, []);
 
   const handleDisconnect = useCallback(async () => {
@@ -49,7 +70,7 @@ export function ConnectButton({
         ) : (
           <Wallet className="h-4 w-4" />
         )}
-        CONNECT BASE ACCOUNT
+        CONNECT MONAD WALLET
       </Button>
     );
   }

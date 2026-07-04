@@ -49,9 +49,153 @@ export function ApprovalCard({
     }
   }, [approval.status, stopPolling]);
 
-  const handleOpen = () => {
-    setOpened(true);
-    startPolling();
+  const [approving, setApproving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleDirectApprove = async () => {
+    if (!approval.requestId) return;
+    setApproving(true);
+    setError(null);
+    try {
+      // 1) Fetch target transaction details from local MCP server
+      const detailsRes = await fetch(`/api/mcp/request-details?requestId=${encodeURIComponent(approval.requestId)}`);
+      if (!detailsRes.ok) throw new Error("Transaction details not found.");
+      const details = await detailsRes.json();
+
+      let customTxHash: string | null = null;
+      const eth = (window as any).ethereum;
+
+      if (eth) {
+        // 2) switch / add Monad Mainnet
+        const chainId = await eth.request({ method: "eth_chainId" });
+        if (chainId !== "0x8f") {
+          try {
+            await eth.request({
+              method: "wallet_switchEthereumChain",
+              params: [{ chainId: "0x8f" }],
+            });
+          } catch (switchError: any) {
+            if (switchError.code === 4902) {
+              try {
+                await eth.request({
+                  method: "wallet_addEthereumChain",
+                  params: [
+                    {
+                      chainId: "0x8f",
+                      chainName: "Monad Mainnet",
+                      nativeCurrency: { name: "Monad", symbol: "MON", decimals: 18 },
+                      rpcUrls: ["https://rpc.monad.xyz"],
+                      blockExplorerUrls: ["https://monadvision.xyz"],
+                    },
+                  ],
+                });
+              } catch (addError) {
+                console.error("Failed to add Monad chain", addError);
+              }
+            }
+          }
+        }
+
+        // 3) Request account connection
+        const accounts = await eth.request({ method: "eth_requestAccounts" });
+        if (accounts && accounts.length > 0) {
+          let txParams: any = null;
+
+          const isValidAddress = (addr: string) => {
+            if (!addr) return false;
+            return /^0x[a-fA-F0-9]{40}$/.test(addr);
+          };
+
+          if (details?.tool === "send_tokens") {
+            const amountFloat = parseFloat(details?.details?.amount || "0") || 0;
+            const valueHex = "0x" + BigInt(Math.floor(amountFloat * 1e18)).toString(16);
+            txParams = {
+              from: accounts[0],
+              to: isValidAddress(details?.details?.to) ? details.details.to : accounts[0],
+              value: valueHex,
+            };
+          } else if (details?.tool === "deposit") {
+            const amountFloat = parseFloat(details?.details?.amount || "0") || 0;
+            const valueHex = "0x" + BigInt(Math.floor(amountFloat * 1e18)).toString(16);
+            txParams = {
+              from: accounts[0],
+              to: isValidAddress(details?.details?.poolId)
+                ? details.details.poolId
+                : "0x1111111111111111111111111111111111111111",
+              value: valueHex,
+            };
+          } else if (details?.tool === "swap_tokens") {
+            const amountFloat = parseFloat(details?.details?.amount || "0") || 0;
+            const valueHex = "0x" + BigInt(Math.floor(amountFloat * 1e18)).toString(16);
+            txParams = {
+              from: accounts[0],
+              to: accounts[0],
+              value: valueHex,
+              data: "0x" + Array.from(new TextEncoder().encode("Swap " + details?.details?.amount + " " + details?.details?.from + " to " + details?.details?.to)).map(b => b.toString(16).padStart(2, '0')).join(""),
+            };
+          } else if (details?.tool === "send_calls") {
+            const firstCall = details?.details?.calls?.[0];
+            let callValueHex = "0x0";
+            if (firstCall?.value) {
+              if (firstCall.value.startsWith("0x")) {
+                callValueHex = firstCall.value;
+              } else {
+                try {
+                  callValueHex = "0x" + BigInt(firstCall.value).toString(16);
+                } catch {
+                  callValueHex = "0x0";
+                }
+              }
+            }
+            txParams = {
+              from: accounts[0],
+              to: isValidAddress(firstCall?.to) ? firstCall.to : accounts[0],
+              value: callValueHex,
+              data: firstCall?.data || "0x",
+            };
+          }
+
+          if (txParams) {
+            customTxHash = await eth.request({
+              method: "eth_sendTransaction",
+              params: [txParams],
+            });
+          }
+        }
+      }
+
+      // 4) Submit approval confirmation back to mock server
+      const submitRes = await fetch("/api/mcp/approve-submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ requestId: approval.requestId, txHash: customTxHash || undefined }),
+      });
+      if (!submitRes.ok) throw new Error("Approval confirmation failed.");
+      const data = await submitRes.json();
+      if (data.ok) {
+        setOpened(true);
+        startPolling();
+      } else {
+        throw new Error(data.error || "Approval confirmation failed.");
+      }
+    } catch (err: any) {
+      console.warn("Direct wallet signing failed:", err?.message || (typeof err === "object" ? JSON.stringify(err) : err));
+      const errorMsg = (err?.message || "").toLowerCase();
+      if (
+        err?.code === 4001 ||
+        errorMsg.includes("rejected") ||
+        errorMsg.includes("denied") ||
+        errorMsg.includes("user denied")
+      ) {
+        window.alert("Transaction rejected in wallet.");
+        setError("Transaction rejected in wallet.");
+      } else {
+        window.alert(err?.message || "Approval signing failed.");
+        setError(err?.message || "Approval signing failed.");
+      }
+    } finally {
+      setApproving(false);
+    }
   };
 
   const variant = approval.status ?? "pending";
@@ -109,13 +253,13 @@ export function ApprovalCard({
           <div className="mt-0.5 text-xs text-muted-foreground">
             {variant === "confirmed"
               ? approval.tokenAddress
-                ? "Your token is live on Base."
-                : "Your Base Account broadcasted this transaction."
+                ? "Your token is live on Monad."
+                : "Your Monad Wallet broadcasted this transaction."
               : variant === "failed"
-                ? "Base Account reported this request as rejected or failed."
+                ? "Monad Wallet reported this request as rejected or failed."
                 : approval.tokenAddress
-                  ? "Approve in Base Account — your token address is already set (CREATE2)."
-                  : "Open Base Account to review and approve."}
+                  ? "Approve in Monad Wallet — your token address is already set (CREATE2)."
+                  : "Open Monad Wallet to review and approve."}
           </div>
           {approval.tokenAddress && (
             <TokenAddressBlock
@@ -127,41 +271,55 @@ export function ApprovalCard({
           )}
           {approval.txHash && (
             <a
-              href={`https://basescan.org/tx/${approval.txHash}`}
+              href={`https://monadvision.com/tx/${approval.txHash}`}
               target="_blank"
               rel="noopener noreferrer"
               className="mt-2 inline-flex items-center gap-1 text-xs text-primary hover:underline"
             >
               <ExternalLink className="h-3 w-3" />
-              View on BaseScan ({approval.txHash.slice(0, 10)}…)
+              View on MonadVision ({approval.txHash.slice(0, 10)}…)
             </a>
           )}
           {!approval.txHash && variant === "pending" && (
-            <div className="mt-3 flex flex-wrap items-center gap-2">
-              <Button asChild size="sm" variant="default">
-                <a
-                  href={approval.approvalUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={handleOpen}
-                >
-                  Approve Transaction
-                  <ArrowUpRight className="h-3.5 w-3.5" />
-                </a>
-              </Button>
-              {approval.requestId && opened && (
+            <div className="mt-3 flex flex-col gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <Button
                   size="sm"
-                  variant="ghost"
-                  onClick={async () => {
-                    if (!onPoll) return;
-                    setPolling(true);
-                    await onPoll();
-                    setPolling(false);
-                  }}
+                  variant="default"
+                  onClick={handleDirectApprove}
+                  disabled={approving}
                 >
-                  I approved — check status
+                  {approving ? (
+                    <>
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      Approving…
+                    </>
+                  ) : (
+                    <>
+                      Approve Transaction
+                      <ArrowUpRight className="h-3.5 w-3.5" />
+                    </>
+                  )}
                 </Button>
+                {approval.requestId && opened && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={async () => {
+                      if (!onPoll) return;
+                      setPolling(true);
+                      await onPoll();
+                      setPolling(false);
+                    }}
+                  >
+                    I approved — check status
+                  </Button>
+                )}
+              </div>
+              {error && (
+                <div className="text-[11.5px] font-semibold text-destructive mt-1">
+                  {error}
+                </div>
               )}
             </div>
           )}
@@ -234,22 +392,13 @@ function TokenAddressBlock({
       )}
       <div className="mt-2 flex flex-wrap gap-3">
         <a
-          href={`https://basescan.org/token/${address}`}
+          href={`https://monadvision.com/address/${address}`}
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
         >
           <ExternalLink className="h-3 w-3" />
-          BaseScan
-        </a>
-        <a
-          href={`https://clanker.world/clanker/${address}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
-        >
-          <ExternalLink className="h-3 w-3" />
-          Clanker
+          MonadVision
         </a>
       </div>
     </div>

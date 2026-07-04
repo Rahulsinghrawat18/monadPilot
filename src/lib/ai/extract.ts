@@ -37,7 +37,8 @@ export function extractApprovals(text: string): ApprovalRef[] {
   if (!text) return [];
 
   const out: ApprovalRef[] = [];
-  const seen = new Set<string>();
+  const seenUrls = new Set<string>();
+  const seenIds = new Set<string>();
 
   // 1) Try to parse JSON blocks first — gives us structured approvalUrl + requestId.
   for (const match of text.matchAll(/\{[\s\S]*?\}/g)) {
@@ -51,9 +52,14 @@ export function extractApprovals(text: string): ApprovalRef[] {
         "callId",
         "call_id",
       ]);
-      if (url && isApprovalUrl(url) && !seen.has(url)) {
-        out.push({ approvalUrl: url, requestId: id });
-        seen.add(url);
+      if (url && isApprovalUrl(url)) {
+        const normUrl = url.replace(/\\/g, "");
+        const isDuplicate = seenUrls.has(normUrl) || (id && seenIds.has(id));
+        if (!isDuplicate) {
+          out.push({ approvalUrl: normUrl, requestId: id });
+          seenUrls.add(normUrl);
+          if (id) seenIds.add(id);
+        }
       }
     } catch {
       /* not a JSON block — fine */
@@ -64,13 +70,19 @@ export function extractApprovals(text: string): ApprovalRef[] {
   let m: RegExpExecArray | null;
   while ((m = URL_RE.exec(text)) !== null) {
     const url = m[1].replace(/[.,;!?]+$/, "");
-    if (isApprovalUrl(url) && !seen.has(url)) {
+    if (isApprovalUrl(url)) {
+      const normUrl = url.replace(/\\/g, "");
       const idMatch = text.match(REQUEST_ID_RE);
-      out.push({
-        approvalUrl: url,
-        requestId: idMatch?.[1],
-      });
-      seen.add(url);
+      const id = idMatch?.[1];
+      const isDuplicate = seenUrls.has(normUrl) || (id && seenIds.has(id));
+      if (!isDuplicate) {
+        out.push({
+          approvalUrl: normUrl,
+          requestId: id,
+        });
+        seenUrls.add(normUrl);
+        if (id) seenIds.add(id);
+      }
     }
   }
 

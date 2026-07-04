@@ -15,7 +15,7 @@ import {
   extractApprovals,
 } from "@/lib/ai/extract";
 import { LOCAL_TOOLS, runLocalTool, buildFunctionCallOutput } from "@/lib/ai/local-tools";
-import { callTool, parseToolResult } from "@/lib/mcp/client";
+import { callTool, parseToolResult, listTools, type McpTool } from "@/lib/mcp/client";
 import type { Address } from "viem";
 
 export const runtime = "nodejs";
@@ -92,25 +92,32 @@ export async function POST(req: NextRequest) {
         );
       };
 
+      // Fetch MCP tools locally on the server (works on localhost)
+      let mcpTools: McpTool[] = [];
+      try {
+        mcpTools = await listTools(accessToken);
+      } catch (e) {
+        console.error("Failed to list MCP tools locally", e);
+      }
+
+      const mappedMcpTools: Tool[] = mcpTools.map((t) => ({
+        type: "function",
+        name: t.name,
+        description: t.description ?? "",
+        strict: false,
+        parameters: (t.inputSchema ?? { type: "object", properties: {} }) as any,
+      }));
+
       const tools: Tool[] = [
-        {
-          type: "mcp",
-          server_label: "base-mcp",
-          server_description:
-            "Base Account: wallets, sends, swaps, sign, x402 payments, batched contract calls, tx history. Plus partner plugins (Morpho, Moonwell, Uniswap, Aerodrome).",
-          server_url: BASE_MCP_URL,
-          authorization: accessToken,
-          require_approval: "never",
-        },
+        ...mappedMcpTools,
         ...LOCAL_TOOLS,
       ];
 
       try {
-        let nextInput: ResponseCreateParamsStreaming["input"] | undefined =
-          body.previousResponseId
-            ? [toResponsesInput(body.messages[body.messages.length - 1])]
-            : body.messages.map(toResponsesInput);
-        let prevResponseId: string | null = body.previousResponseId ?? null;
+        // Start a fresh response for the new user turn, passing the full message history.
+        // We only use prevResponseId inside the loop below to chain tool call resolutions.
+        let nextInput: ResponseCreateParamsStreaming["input"] | undefined = body.messages.map(toResponsesInput);
+        let prevResponseId: string | null = null;
         let iteration = 0;
 
         while (iteration < MAX_TOOL_LOOPS) {
@@ -120,7 +127,7 @@ export async function POST(req: NextRequest) {
           const events = await openai.responses.create({
             model: CHAT_MODEL,
             stream: true,
-            instructions: SYSTEM_PROMPT,
+            instructions: `${SYSTEM_PROMPT}\n\nConnected User Wallet Address: ${userAddress ?? "unknown"}`,
             previous_response_id: prevResponseId ?? undefined,
             input: nextInput!,
             tools,
@@ -141,11 +148,25 @@ export async function POST(req: NextRequest) {
           const outputs = await Promise.all(
             pendingCalls.map(async (call) => {
               try {
-                const output = await runLocalTool(
-                  call.name,
-                  safeJson(call.arguments),
-                  { userAddress, accessToken }
-                );
+                const isMcp = mcpTools.some((t) => t.name === call.name);
+                let output: string;
+
+                if (isMcp) {
+                  const res = await callTool(
+                    accessToken,
+                    call.name,
+                    (safeJson(call.arguments) ?? {}) as Record<string, unknown>
+                  );
+                  const parsed = parseToolResult(res);
+                  output = parsed.text;
+                } else {
+                  output = await runLocalTool(
+                    call.name,
+                    safeJson(call.arguments),
+                    { userAddress, accessToken }
+                  );
+                }
+
                 // Local tools that proxy through Base MCP (e.g.
                 // prepare_clanker_token relaying send_calls) embed an MCP
                 // response containing an approval URL. Pull it out so the

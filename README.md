@@ -1,16 +1,16 @@
-# basePilot
+# monadPilot
 
-> **Talk to DeFi.** A voice-first AI copilot on Base, powered by [Base MCP](https://docs.base.org/ai-agents).
+> **Talk to DeFi.** A voice-first AI copilot on Monad, powered by [Monad MCP](https://docs.monad.xyz).
 
-basePilot lets users send tokens, swap assets, find the best yields, and lend to Morpho — all in one sentence. It connects your AI assistant (OpenAI Responses API + Whisper) to your Base Account through the Base MCP server (`mcp.base.org`), so every write action is signed in your wallet with a one-click approval.
+monadPilot lets users send tokens, swap assets, find the best yields, and deploy custom tokens — all in one sentence. It connects your AI assistant (OpenAI Responses API + Whisper) to your Monad Wallet through a local Monad MCP server, so every write action is signed in your wallet with a one-click MetaMask approval.
 
 **Try saying:**
 
-> "Send 5 USDC to jesse.base.eth"
+> "Send 5 MON to 0xYourMonadAddress"
 
-> "Swap 0.05 ETH to USDC"
+> "Swap 0.05 MON to USDT"
 
-> "Find the best USDC yield on Base and deposit 100 USDC into the winner"
+> "Find the best MON yield on Monad and deposit 1 MON into the Ambient pool"
 
 ---
 
@@ -21,23 +21,23 @@ basePilot lets users send tokens, swap assets, find the best yields, and lend to
 │   Browser    │ ────────────▶ │   /api/chat (SSE)    │
 │  (Next.js)   │ ◀────────────  │   OpenAI Responses   │
 └──────────────┘    stream      └──────────┬───────────┘
-                                           │ MCP (oauth)
+                                           │ local MCP (route)
                                 ┌──────────▼───────────┐
-                                │   mcp.base.org       │
-                                │  (Base Account)      │
+                                │   Local MCP Server   │
+                                │  (Monad Account)     │
                                 └──────────┬───────────┘
-                                  approval │ url
+                                  approval │ url / MetaMask
                                 ┌──────────▼───────────┐
-                                │   Base Account UI    │
+                                │  MetaMask Interface  │
                                 │  (user approves tx)  │
                                 └──────────────────────┘
 ```
 
-- **Wallet & writes**: Base MCP. We never hold keys.
-- **Chat orchestration**: OpenAI Responses API with Base MCP wired in as an `mcp` tool, plus local read-only function tools (`find_base_yield`, `read_portfolio`, `get_token_prices_usd`).
-- **Yield discovery**: live DefiLlama yields, filtered to Base + Morpho/Moonwell/Aerodrome.
-- **Voice**: browser MediaRecorder → OpenAI Whisper → autosend transcript.
-- **Auth**: OAuth 2.1 + PKCE with Dynamic Client Registration against `mcp.base.org`. Tokens stored encrypted in an iron-session cookie.
+- **Wallet & writes**: Inline MetaMask transaction triggers on Monad Mainnet. We never hold keys.
+- **Chat orchestration**: OpenAI Responses API with Local Monad MCP server integration, plus local read-only function tools (`find_base_yield`, `read_portfolio`, `get_token_prices_usd`).
+- **Yield discovery**: Live DefiLlama yields, filtered to Monad (Ambient/Kuru).
+- **Voice**: Browser MediaRecorder → OpenAI Whisper → autosend transcript.
+- **Auth**: Simple mock login/session provider for developer convenience. Session tokens stored encrypted in an iron-session cookie.
 
 ---
 
@@ -45,7 +45,7 @@ basePilot lets users send tokens, swap assets, find the best yields, and lend to
 
 ```bash
 git clone <this repo>
-cd basepilot
+cd monadpilot
 npm install
 cp .env.example .env.local
 # fill in OPENAI_API_KEY and a SESSION_SECRET (32+ chars)
@@ -53,7 +53,7 @@ openssl rand -base64 48   # paste into SESSION_SECRET
 npm run dev
 ```
 
-Open <http://localhost:3000>, click **Connect Base Account**, approve in your Base Account, and start talking.
+Open <http://localhost:3000>, click **Connect Wallet**, log in, and start talking.
 
 ### Required env
 
@@ -61,7 +61,7 @@ Open <http://localhost:3000>, click **Connect Base Account**, approve in your Ba
 |---|---|
 | `OPENAI_API_KEY` | OpenAI API key — drives the chat + Whisper transcription. |
 | `SESSION_SECRET` | 32+ char random string used to encrypt the session cookie. |
-| `NEXT_PUBLIC_APP_URL` | Your app's public URL (e.g. `http://localhost:3000` in dev). Used as the OAuth redirect target. |
+| `NEXT_PUBLIC_APP_URL` | Your app's public URL (e.g. `http://localhost:3000` in dev). Used as the redirect target. |
 
 See `.env.example` for the full set.
 
@@ -69,15 +69,16 @@ See `.env.example` for the full set.
 
 ## Demo script
 
-1. Land on `/`, click **Connect Base Account**.
-2. Approve in your Base Account.
+1. Land on `/`, click **Connect Wallet**.
+2. Connect your browser wallet (MetaMask) and log in.
 3. Land in `/app`. Say or type:
    - "Show me my wallets"
-   - "What's my USDC balance?"
-   - "Swap 0.05 ETH to USDC" → click **Approve Transaction**
-   - "Find the best USDC yield" → basePilot scans Morpho + Moonwell + Aerodrome live
-   - "Deposit 100 USDC into the winner" → Base MCP's Morpho plugin prepares the approve+deposit bundle → click **Approve Transaction**
-4. Watch tx hashes light up in the chat with BaseScan links.
+   - "What's my MON balance?"
+   - "Swap 0.05 MON to USDT" → click **Approve Transaction** inline
+   - "Find the best MON yield" → monadPilot scans Ambient and Kuru yields live
+   - "Deposit 1 MON into Ambient" → click **Approve Transaction** in chat to trigger MetaMask
+   - "Launch a token named Baby Monad with symbol BMOD" → click **Approve Transaction** to deploy
+4. Watch tx hashes light up in the chat with MonadVision links.
 
 ---
 
@@ -87,26 +88,26 @@ See `.env.example` for the full set.
 src/
   app/
     api/
-      auth/         OAuth login, callback, logout, me
+      auth/         Mock login, callback, logout, me
       chat/         SSE chat endpoint (agent loop + MCP)
       mcp/status/   Approval status polling
       voice/        Whisper transcription
       apy/          Live yields (DefiLlama)
-      portfolio/    On-chain Base portfolio + USD valuations
+      portfolio/    On-chain Monad portfolio + USD valuations
     app/page.tsx    Authenticated chat workspace
     page.tsx        Landing
   components/
     chat/           ChatContainer, MessageBubble, ToolCallCard, ApprovalCard, VoiceButton
     ui/             shadcn-style primitives (Button, Card, Dialog, …)
-    wallet/         ConnectButton (OAuth flow)
+    wallet/         ConnectButton (MetaMask integration)
   hooks/
     use-chat-stream.ts   SSE consumer + chat dispatch
     use-voice-recorder.ts MediaRecorder + Whisper
   lib/
     ai/             OpenAI client, local function tools, output parsing
-    apy/            DefiLlama integration
-    constants/      Base tokens + protocol contracts
-    mcp/            OAuth (PKCE/DCR) + lightweight JSON-RPC client
+    apy/            DefiLlama yields integration (Ambient/Kuru)
+    constants/      Monad tokens + protocol contracts
+    mcp/            Local Mock JSON-RPC MCP server
     wallet/         On-chain reads (balances, portfolio, prices)
     utils/          formatting, cn(), etc.
   prompts/system.ts  System prompt (tool routing, tone, safety)
@@ -117,9 +118,9 @@ src/
 
 ## Security
 
-- **No private keys in basePilot.** Writes are signed exclusively by Base Account via approval URLs.
-- **No raw calldata from the LLM.** Every write goes through a Base MCP tool that validates the request.
-- **OAuth tokens** are encrypted in the session cookie (iron-session) with `SESSION_SECRET`.
+- **No private keys in monadPilot.** Writes are signed exclusively by you via MetaMask window.ethereum triggers.
+- **No raw calldata from the LLM.** Every write goes through a Monad MCP tool that validates parameters.
+- **Session tokens** are encrypted in the session cookie (iron-session) with `SESSION_SECRET`.
 - **Voice transcription** is gated behind authentication so visitors can't burn your Whisper quota.
 
 ---
@@ -128,7 +129,7 @@ src/
 
 - [Next.js 16](https://nextjs.org) (App Router, Turbopack)
 - [OpenAI Responses API](https://developers.openai.com/api/docs/guides/tools-connectors-mcp) (`mcp` + `function` tools)
-- [Base MCP](https://docs.base.org/ai-agents) — `https://mcp.base.org`
+- [Monad EVM](https://docs.monad.xyz) (Chain ID 143)
 - [Viem](https://viem.sh) for on-chain reads
 - [DefiLlama yields](https://defillama.com/yields) for APY discovery
 - shadcn-style UI, Tailwind v4, Framer Motion, Sonner

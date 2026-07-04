@@ -1,12 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
-  <rect x="0" y="0" width="64" height="64" rx="14" fill="#06080d" />
-  <rect x="14" y="20" width="36" height="36" rx="3" fill="#0052FF" />
-  <!-- Cowboy hat -->
-  <path d="M8 32 Q32 22 56 32 Q56 36 32 33 Q8 36 8 32 Z" fill="#0a0a0a" />
-  <path d="M20 32 Q19 16 26 12 Q32 9 38 12 Q45 16 44 32 Z" fill="#0a0a0a" />
-  <!-- Eyes -->
-  <ellipse cx="26" cy="42" rx="5" ry="6" fill="#fff" stroke="#0a0a0a" stroke-width="1.5" />
-  <ellipse cx="40" cy="42" rx="5" ry="6" fill="#fff" stroke="#0a0a0a" stroke-width="1.5" />
-  <circle cx="27" cy="43" r="2" fill="#0a0a0a" />
-  <circle cx="41" cy="43" r="2" fill="#0a0a0a" />
+  <rect x="0" y="0" width="64" height="64" rx="14" fill="#0c0a1c" />
+  <rect x="14" y="20" width="36" height="36" rx="6" fill="#836EFD" />
+  <!-- Monad-style glowing robot eyes -->
+  <circle cx="26" cy="38" r="5" fill="#fff" />
+  <circle cx="38" cy="38" r="5" fill="#fff" />
+  <circle cx="26" cy="38" r="2" fill="#0c0a1c" />
+  <circle cx="38" cy="38" r="2" fill="#0c0a1c" />
+  <path d="M22 47 Q32 52 42 47" stroke="#fff" stroke-width="2" stroke-linecap="round" />
 </svg>

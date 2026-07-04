@@ -44,7 +44,7 @@ export function ChatInput({ disabled }: { disabled?: boolean }) {
         onChange={(e) => setInput(e.target.value)}
         placeholder={
           disabled
-            ? "Connect Base Account to start chatting…"
+            ? "Connect Monad Wallet to start chatting…"
             : "Ask anything. Try: ‘Find the best USDC yield and deposit 100’"
         }
         disabled={disabled}

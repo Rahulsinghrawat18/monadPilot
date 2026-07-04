@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
       response_format: "json",
       temperature: 0,
       prompt:
-        "User is speaking to a Base DeFi assistant. Likely vocabulary: Base, USDC, ETH, DEGEN, cbBTC, cbETH, AERO, Morpho, Moonwell, Aerodrome, Uniswap, swap, send, deposit, basename, ENS, jesse.base.eth, vitalik.eth, yield, APY, vault.",
+        "User is speaking to a Monad DeFi assistant. Likely vocabulary: Monad, USDC, MON, WMON, CHOG, Ambient, Kuru, Uniswap, swap, send, deposit, nadname, ENS, keone.nad, yield, APY, vault.",
     });
 
     const text = (out as { text?: string }).text ?? "";

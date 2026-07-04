@@ -37,7 +37,7 @@ export const LOCAL_TOOLS: FunctionTool[] = [
     type: "function",
     name: "find_base_yield",
     description:
-      "Find the highest APY opportunities on Base for a given asset across Morpho, Moonwell, Aerodrome, etc. Returns a ranked list with protocol, pool/vault name, APY, TVL, and reward tokens. Powered by DefiLlama yields.",
+      "Find the highest APY opportunities on Monad for a given asset across Ambient, Kuru, etc. Returns a ranked list with protocol, pool/vault name, APY, TVL, and reward tokens. Powered by DefiLlama yields.",
     strict: true,
     parameters: {
       type: "object",
@@ -45,13 +45,13 @@ export const LOCAL_TOOLS: FunctionTool[] = [
       properties: {
         asset: {
           type: "string",
-          description: "Asset symbol (e.g. USDC, ETH, cbBTC, DAI).",
+          description: "Asset symbol (e.g. USDC, MON, WMON, CHOG).",
         },
         protocols: {
           type: ["array", "null"],
           description:
-            "Optional restriction. If omitted, includes morpho + moonwell + aerodrome.",
-          items: { type: "string", enum: ["morpho", "moonwell", "aerodrome"] },
+            "Optional restriction. If omitted, includes ambient + kuru.",
+          items: { type: "string", enum: ["ambient", "kuru"] },
         },
         minTvlUsd: {
           type: ["number", "null"],
@@ -81,7 +81,7 @@ export const LOCAL_TOOLS: FunctionTool[] = [
     type: "function",
     name: "get_token_prices_usd",
     description:
-      "Look up live USD spot prices for Base tokens. Use this to compute USD values, slippage, or to convert between assets.",
+      "Look up live USD spot prices for Monad tokens. Use this to compute USD values, slippage, or to convert between assets.",
     strict: true,
     parameters: {
       type: "object",
@@ -90,7 +90,7 @@ export const LOCAL_TOOLS: FunctionTool[] = [
         tokens: {
           type: "array",
           description:
-            "Token symbols or addresses on Base (e.g. ['USDC','ETH','AERO']).",
+            "Token symbols or addresses on Monad (e.g. ['USDC','MON','CHOG']).",
           items: { type: "string" },
         },
       },
@@ -101,7 +101,7 @@ export const LOCAL_TOOLS: FunctionTool[] = [
     type: "function",
     name: "read_portfolio",
     description:
-      "Read the user's full Base portfolio (token balances + USD valuations) for a given address. Use this when the user asks for a portfolio overview or 'what do I have'.",
+      "Read the user's full Monad portfolio (token balances + USD valuations) for a given address. Use this when the user asks for a portfolio overview or 'what do I have'.",
     strict: true,
     parameters: {
       type: "object",
@@ -153,10 +153,10 @@ export const LOCAL_TOOLS: FunctionTool[] = [
           description:
             "Whether to grind a vanity 0x…b07 suffix address. Adds a few seconds. Default false.",
         },
-        devBuyEth: {
+        devBuyMon: {
           type: ["number", "null"],
           description:
-            "Optional ETH to spend buying the new token in the same transaction (e.g. 0.01).",
+            "Optional MON to spend buying the new token in the same transaction (e.g. 0.01).",
         },
         vaultPercent: {
           type: ["number", "null"],
@@ -181,7 +181,7 @@ export const LOCAL_TOOLS: FunctionTool[] = [
         "description",
         "tokenAdmin",
         "vanity",
-        "devBuyEth",
+        "devBuyMon",
         "vaultPercent",
         "lockupDays",
         "vestingDays",
@@ -192,7 +192,7 @@ export const LOCAL_TOOLS: FunctionTool[] = [
 
 type FindBaseYieldArgs = {
   asset: string;
-  protocols?: Array<"morpho" | "moonwell" | "aerodrome"> | null;
+  protocols?: Array<"ambient" | "kuru"> | null;
   minTvlUsd?: number | null;
   singleSidedOnly?: boolean | null;
   limit?: number | null;
@@ -206,7 +206,7 @@ type PrepareClankerArgs = {
   description?: string | null;
   tokenAdmin?: string | null;
   vanity?: boolean | null;
-  devBuyEth?: number | null;
+  devBuyMon?: number | null;
   vaultPercent?: number | null;
   lockupDays?: number | null;
   vestingDays?: number | null;
@@ -251,13 +251,18 @@ export async function runLocalTool(
     }
     case "read_portfolio": {
       const a = args as ReadPortfolioArgs;
-      if (!a.address?.startsWith("0x")) {
-        return JSON.stringify({
-          ok: false,
-          error: "Invalid address. Pass the user's 0x… address from get_wallets.",
-        });
+      let targetAddr = a.address;
+      if (!targetAddr || !targetAddr.startsWith("0x") || targetAddr.toLowerCase().includes("yourmonadaddress")) {
+        if (ctx.userAddress) {
+          targetAddr = ctx.userAddress;
+        } else {
+          return JSON.stringify({
+            ok: false,
+            error: "Invalid address. Pass the user's 0x… address from get_wallets.",
+          });
+        }
       }
-      const data = await getPortfolio(a.address as Address);
+      const data = await getPortfolio(targetAddr as Address);
       return JSON.stringify({
         ok: true,
         account: data.account,
@@ -306,7 +311,7 @@ export async function runLocalTool(
         image: a.image ?? null,
         description: a.description ?? null,
         vanity: a.vanity ?? false,
-        devBuyEth: a.devBuyEth ?? null,
+        devBuyMon: a.devBuyMon ?? null,
         vault,
       });
 
@@ -392,7 +397,7 @@ export function buildFunctionCallOutput(
 ): ResponseInputItem {
   return {
     type: "function_call_output",
-    call_id: call.call_id,
+    call_id: (call.call_id || call.id || "") as string,
     output,
   };
 }

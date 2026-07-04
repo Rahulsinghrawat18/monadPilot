@@ -1,5 +1,5 @@
 export type YieldOpportunity = {
-  protocol: "morpho" | "moonwell" | "aerodrome" | "compound" | "aave" | "other";
+  protocol: "ambient" | "kuru" | "morpho" | "moonwell" | "aerodrome" | "compound" | "aave" | "other";
   pool: string;
   asset: string;
   /** APY in percent (e.g. 7.42 means 7.42%). */

@@ -1,33 +1,43 @@
 import { NextRequest, NextResponse } from "next/server";
-import { buildRedirectUri, startAuthorization } from "@/lib/mcp/oauth";
 import { getSession } from "@/lib/session";
 
 /**
  * GET /api/auth/login?returnTo=/somewhere
  *
- * Starts the Base MCP OAuth flow:
- *   1. Generates PKCE verifier + state, stored encrypted in the session.
- *   2. Returns (or redirects to) the authorize URL on mcp.base.org.
+ * Mocks the authentication flow for monadPilot:
+ *   Instantly grants a mock session with Monad parameters and redirects to /app.
  */
 export async function GET(req: NextRequest) {
   const url = new URL(req.url);
-  const origin =
-    process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ?? url.origin;
-  const redirectUri = buildRedirectUri(origin);
   const returnTo = url.searchParams.get("returnTo") ?? "/app";
 
   try {
-    const { authorizeUrl, pending } = await startAuthorization(redirectUri);
     const session = await getSession();
-    session.pendingAuth = { ...pending, returnTo };
+
+    // Grant mock session for Monad mode!
+    session.mcp = {
+      accessToken: "mock-monad-mcp-token",
+      refreshToken: "mock-monad-mcp-refresh",
+      expiresAt: Date.now() + 24 * 60 * 60 * 1000, // 24 hours
+      scope: "agent_wallet:transact",
+      clientId: "mock-monad-client-id",
+    };
+
+    const address = url.searchParams.get("address") || "0x836EFD0000000000000000000000000000000143";
+    session.account = {
+      address: address as `0x${string}`,
+      chainId: 143, // Monad Mainnet ID
+      label: "Monad Primary Wallet",
+    };
+
     await session.save();
 
     if (url.searchParams.get("json") === "1") {
-      return NextResponse.json({ authorizeUrl });
+      return NextResponse.json({ authorizeUrl: returnTo });
     }
-    return NextResponse.redirect(authorizeUrl);
+    return NextResponse.redirect(new URL(returnTo, url.origin));
   } catch (e) {
-    const message = e instanceof Error ? e.message : "Failed to start OAuth.";
+    const message = e instanceof Error ? e.message : "Failed to start Monad auth session.";
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

@@ -98,7 +98,7 @@ export function MessageBubble({ message }: { message: ChatMessage }) {
 
         {message.approvals?.map((a, i) => (
           <ApprovalCard
-            key={a.requestId ?? a.approvalUrl ?? i}
+            key={`${a.requestId ?? ""}-${a.approvalUrl ?? ""}-${i}`}
             approval={a}
             onPoll={() => pollApproval(message.id, a)}
           />

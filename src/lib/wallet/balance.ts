@@ -1,6 +1,6 @@
 import { type Address, erc20Abi, formatUnits } from "viem";
-import { basePublicClient } from "./clients";
-import { BASE_TOKENS, TOKEN_LIST, type TokenInfo } from "@/lib/constants/tokens";
+import { monadPublicClient } from "./clients";
+import { MONAD_TOKENS, TOKEN_LIST, type TokenInfo } from "@/lib/constants/tokens";
 
 const ZERO = BigInt(0);
 
@@ -20,14 +20,14 @@ export async function getTokenBalance(
   token: TokenInfo
 ): Promise<TokenBalance> {
   if (token.isNative) {
-    const raw = await basePublicClient.getBalance({ address: account });
+    const raw = await monadPublicClient.getBalance({ address: account });
     return {
       token,
       raw,
       formatted: formatUnits(raw, token.decimals),
     };
   }
-  const raw = (await basePublicClient.readContract({
+  const raw = (await monadPublicClient.readContract({
     address: token.address,
     abi: erc20Abi,
     functionName: "balanceOf",
@@ -53,7 +53,7 @@ export async function getPortfolioBalances(
   const native = tokens.find((t) => t.isNative);
 
   const [erc20Results, nativeRaw] = await Promise.all([
-    basePublicClient.multicall({
+    monadPublicClient.multicall({
       allowFailure: true,
       contracts: erc20s.map((t) => ({
         address: t.address,
@@ -63,7 +63,7 @@ export async function getPortfolioBalances(
       })),
     }),
     native
-      ? basePublicClient.getBalance({ address: account })
+      ? monadPublicClient.getBalance({ address: account })
       : Promise.resolve(ZERO),
   ]);
 
@@ -98,7 +98,7 @@ export async function getBalanceByQuery(
   query: string
 ): Promise<TokenBalance> {
   const token =
-    BASE_TOKENS[query.toUpperCase()] ??
+    MONAD_TOKENS[query.toUpperCase()] ??
     TOKEN_LIST.find(
       (t) =>
         t.address.toLowerCase() === query.toLowerCase() ||

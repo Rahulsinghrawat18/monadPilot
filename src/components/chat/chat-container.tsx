@@ -21,26 +21,26 @@ const STARTERS = [
     icon: Wallet,
     label: "Show me my wallets",
     sub: "WALLET · OVERVIEW",
-    prompt: "Show me my wallets and balances on Base.",
+    prompt: "Show me my wallets and balances on Monad.",
   },
   {
     icon: Send,
-    label: "Send 1 USDC to jesse.base.eth",
+    label: "Send 1 USDC to KEONE.NAD",
     sub: "TRANSFER · BASENAME",
-    prompt: "Send 1 USDC to jesse.base.eth",
+    prompt: "Send 1 USDC to KEONE.NAD",
   },
   {
     icon: Shuffle,
-    label: "Swap 0.05 ETH to USDC",
+    label: "Swap 10 MON to USDC",
     sub: "SWAP · ON-CHAIN",
-    prompt: "Swap 0.05 ETH to USDC on Base",
+    prompt: "Swap 10 MON to USDC on Monad",
   },
   {
     icon: TrendingUp,
     label: "Best USDC yield, deposit 100",
-    sub: "DEFI · MORPHO/MOONWELL",
+    sub: "DEFI · AMBIENT/KURU",
     prompt:
-      "Find the best USDC yield on Base, then deposit 100 USDC into the winner.",
+      "Find the best USDC yield on Monad, then deposit 100 USDC into the winner.",
   },
 ];
 
@@ -85,7 +85,7 @@ export function ChatContainer({
         <div className="mx-auto max-w-3xl">
           <ChatInput disabled={!isConnected} />
           <p className="mt-2 text-center text-[11px] text-muted-foreground">
-            Every write requires approval in your Base Account. basePilot never
+            Every write requires approval in your Monad Wallet. monadPilot never
             holds your keys.
           </p>
         </div>
@@ -150,7 +150,7 @@ function EmptyState({
             onClick={() => onPick(s.prompt)}
             className="group flex items-center gap-3 rounded-2xl border border-border bg-card p-4 text-left text-sm transition-all hover:border-primary/50 hover:bg-card/80 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[6px] base-square text-white">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[6px] monad-square text-white">
               <s.icon className="h-4 w-4" />
             </div>
             <div className="flex-1 min-w-0">
@@ -167,11 +167,11 @@ function EmptyState({
       {!isConnected && (
         <div className="rounded-2xl border border-primary/30 bg-primary/[0.04] p-4 text-center text-sm">
           <p className="font-pixel-bold text-[11px] uppercase tracking-[0.15em] text-foreground">
-            CONNECT BASE ACCOUNT
+            CONNECT MONAD WALLET
           </p>
           <p className="mt-2 text-xs text-muted-foreground">
-            basePilot uses Base MCP to talk to your Base Account. You'll
-            approve every write action in Base Account.
+            monadPilot uses Monad MCP to talk to your Monad Wallet. You'll
+            approve every write action in your Monad Wallet.
           </p>
         </div>
       )}
